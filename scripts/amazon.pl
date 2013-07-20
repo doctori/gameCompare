@@ -26,31 +26,29 @@ use strict;
 use warnings;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/etc";
 use Data::Dumper;
-
 use RequestSignatureHelper;
+use config;
 use LWP::UserAgent;
 use XML::Simple;
 use base 'Exporter';
 our @EXPORT = qw($itemId );
-use constant myAWSId	    => 'AKIAJWXNHXS4I7TCKV4Q';
-use constant myAWSSecret    => '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';
-use constant myEndPoint	    => 'webservices.amazon.fr';
-use constant myAssociateID  => 'angrygamersfr-20';
+
 # see if user provided ItemId on command-line
 my $itemId = shift @ARGV || '0545010225';
 
 # Set up the helper
 my $helper = new RequestSignatureHelper (
-    +RequestSignatureHelper::kAWSAccessKeyId => myAWSId,
-    +RequestSignatureHelper::kAWSSecretKey => myAWSSecret,
-    +RequestSignatureHelper::kEndPoint => myEndPoint,
+    +RequestSignatureHelper::kAWSAccessKeyId => config::myAWSId,
+    +RequestSignatureHelper::kAWSSecretKey => config::myAWSSecret,
+    +RequestSignatureHelper::kEndPoint => config::myEndPoint,
 );
 
 # A simple ItemLookup request
 my $request = {
     Service => 'AWSECommerceService',
-    AssociateTag => myAssociateID,
+    AssociateTag => config::myAssociateID,
     Operation => 'ItemSearch',
     BrowseNode => '548026', # VideoGaming PC node
     SearchIndex => 'SoftwareVideoGames',
@@ -68,7 +66,7 @@ open(XMLFILE , '>log_amazon.xml');
 		my $ASIN = $item->{ASIN};
 		$request = {
 			Service => 'AWSECommerceService',
-			AssociateTag => myAssociateID,
+			AssociateTag =>config::myAssociateID,
 			Operation => 'ItemLookup',
 			Version => '2011-08-01',
 			ItemId => $ASIN,
@@ -91,7 +89,7 @@ sub sendRequest {
 	
 	# # We can use the helper's canonicalize() function to construct the query string too.
 	 my $queryString = $helper->canonicalize($signedRequest);
-	 my $url = "http://" . myEndPoint . "/onca/xml?" . $queryString;
+	 my $url = "http://" .config::myEndPoint . "/onca/xml?" . $queryString;
 	 print "Sending request to URL: $url \n";
 	
 	 my $ua = new LWP::UserAgent();
